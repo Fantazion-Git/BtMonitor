@@ -18,6 +18,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.btmonitor.databinding.ActivityMainBinding
 
 
 private var btAdapter : BluetoothAdapter?=null
@@ -25,10 +27,13 @@ private var btAdapter : BluetoothAdapter?=null
 
 class MainActivity : AppCompatActivity() {
     private lateinit var pLauncher : ActivityResultLauncher<String>
+    private lateinit var binding : ActivityMainBinding
+    private lateinit var adapter: RcAdapter
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         registerPermissionListener()
         checkPermissions()
         init()
@@ -60,14 +65,19 @@ class MainActivity : AppCompatActivity() {
     private fun init(){
         val btManager= getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         btAdapter=btManager.adapter
+        adapter= RcAdapter()
+        binding.rcView.layoutManager=LinearLayoutManager(this)
+        binding.rcView.adapter=adapter
         getPairedDevices()
 
     }
     @SuppressLint("MissingPermission")
     private fun getPairedDevices(){
         val pairedDevices :Set<BluetoothDevice>? = btAdapter?.bondedDevices
+        val tempList = ArrayList<ListItem>()
         pairedDevices?.forEach {
-            Log.d("MyLog","Name: ${it.name}")
+            tempList.add(ListItem(it.name,it.address))
         }
+        adapter.submitList(tempList)
     }
 }
